@@ -112,7 +112,7 @@ public class MyWorker extends Worker {
                 for (; ; ) {
                     Log.i(TAG, "thread... is running...");
                     try {
-                        Thread.sleep(5 * 1000);
+                        Thread.sleep(60 * 1000);
                         OneTimeWorkRequest refreshWork = new OneTimeWorkRequest.Builder(MyWorker.class).build();
                         WorkManager.getInstance(getApplicationContext()).enqueueUniqueWork("Location", ExistingWorkPolicy.REPLACE, refreshWork);
 
