@@ -2,7 +2,10 @@ package com.example.traceme;
 
 import android.content.Context;
 import android.location.Location;
+import android.os.Build;
+import android.provider.Settings;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.work.ExistingWorkPolicy;
@@ -85,6 +88,9 @@ public class MyWorker extends Worker {
                             if (task.isSuccessful() && task.getResult() != null) {
                                 mLocation = task.getResult();
                                 Log.d(TAG, "Location : " + mLocation);
+                                if(isMockLocationOn(mLocation,mContext)){
+                                    Toast.makeText(mContext, "Mock Location is Turned on..", Toast.LENGTH_SHORT).show();
+                                }
                                 String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
                                 DatabaseHelper dbHelper = new DatabaseHelper(mContext);
                                 dbHelper.insertLoc(mLocation.getLatitude(),mLocation.getLongitude(),currentDateTimeString);
@@ -127,4 +133,18 @@ public class MyWorker extends Worker {
 
         return Result.success();
 }
+
+    public static boolean isMockLocationOn(Location location, Context context) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return location.isFromMockProvider();
+        } else {
+            String mockLocation = "0";
+            try {
+                mockLocation = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return !mockLocation.equals("0");
+        }
+    }
 }
