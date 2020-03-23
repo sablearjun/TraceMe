@@ -35,7 +35,8 @@
                 />
             <EditText
                 android:id="@+id/nameet"
-                android:hint="Enter Name"/>
+                android:hint="Enter Name"
+                android:inputType="textPersonName"/>
         </TableRow>
         <TableRow
             android:layout_margin="10dp">
@@ -46,7 +47,8 @@
                 />
             <EditText
                 android:id="@+id/mailet"
-                android:hint="Enter Mail Address       "/>
+                android:hint="Enter Mail Address       "
+                android:inputType="textEmailAddress"/>
         </TableRow>
         <TableRow
             android:layout_margin="10dp">
@@ -57,7 +59,8 @@
                 />
             <EditText
                 android:id="@+id/mobileet"
-                android:hint="Enter Mobile Number"/>
+                android:hint="Enter Mobile Number"
+                android:inputType="phone"/>
         </TableRow>
     </TableLayout>
 

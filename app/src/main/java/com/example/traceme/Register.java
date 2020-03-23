@@ -33,6 +33,7 @@ public class Register extends AppCompatActivity {
                             .putString("mobile", mobile.getText().toString()).apply();
 
                     Intent i = new Intent(getBaseContext(), MainActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(i);
                 }
             }

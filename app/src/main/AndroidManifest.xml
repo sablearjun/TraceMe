@@ -59,6 +59,13 @@
             android:name=".Provider"
             android:authorities="com.example.traceme"
             android:exported="false" />
+
+        <receiver android:name=".StartServiceReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

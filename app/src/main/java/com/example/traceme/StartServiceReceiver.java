@@ -8,6 +8,7 @@ class StartServiceReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        context.startService(new Intent(context, LocationUpdatesService.class));
+        Intent service = new Intent(context, LocationUpdatesService.class);
+        context.startService(service);
     }
 }

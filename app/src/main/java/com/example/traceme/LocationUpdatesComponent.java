@@ -26,7 +26,7 @@ public class LocationUpdatesComponent {
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 3 * 1000;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60 * 1000;
 
     /**
      * The fastest rate for active location updates. Updates will never be more frequent

@@ -1,13 +1,21 @@
 package com.example.traceme;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.location.Location;
+import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.text.DateFormat;
@@ -27,7 +35,7 @@ public class LocationUpdatesService extends JobService implements LocationUpdate
     public static final int LOCATION_MESSAGE = 9999;
 
     private Messenger mActivityMessenger;
-
+    Handler mServiceHandler;
     private LocationUpdatesComponent locationUpdatesComponent;
 
     public LocationUpdatesService() {
@@ -67,12 +75,12 @@ public class LocationUpdatesService extends JobService implements LocationUpdate
         //hey request for location updates
         locationUpdatesComponent.onStart();
 
-      /*  HandlerThread handlerThread = new HandlerThread(TAG);
+        HandlerThread handlerThread = new HandlerThread(TAG);
         handlerThread.start();
-        mServiceHandler = new Handler(handlerThread.getLooper());*/
+        mServiceHandler = new Handler(handlerThread.getLooper());
 
         //This thread is need to continue the service running
-       /* new Thread(new Runnable() {
+       new Thread(new Runnable() {
             @Override
             public void run() {
                 for (; ; ) {
@@ -84,9 +92,24 @@ public class LocationUpdatesService extends JobService implements LocationUpdate
                     }
                 }
             }
-        }).start();*/
+        }).start();
 
         return START_STICKY;
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent){
+        Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
+        restartServiceIntent.setPackage(getPackageName());
+
+        PendingIntent restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmService = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        alarmService.set(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 60*1000,
+                restartServicePendingIntent);
+
+        super.onTaskRemoved(rootIntent);
     }
 
     @Override
@@ -137,9 +160,24 @@ public class LocationUpdatesService extends JobService implements LocationUpdate
         }
     }
 
+    public static boolean isMockLocationOn(Location location, Context context) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return location.isFromMockProvider();
+        } else {
+            String mockLocation = "0";
+            try {
+                mockLocation = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return !mockLocation.equals("0");
+        }
+    }
+
     @Override
     public void onLocationUpdate(Location location) {
         sendMessage(LOCATION_MESSAGE, location);
+//        isMockLocationOn(location,this);
         String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
         DatabaseHelper dbHelper = new DatabaseHelper(this);
         dbHelper.insertLoc(location.getLatitude(),location.getLongitude(),currentDateTimeString);

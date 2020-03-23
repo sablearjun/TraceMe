@@ -5,34 +5,34 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.SystemClock;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import java.text.DateFormat;
 import java.util.Date;
 
-import static androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED;
+import static android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String AUTHORITY = "com.example.traceme";
     public static final String ACCOUNT_TYPE = "example.com";
     public static final String ACCOUNT = "Google";
-    public static final long SECONDS_PER_MINUTE = 1L;
+    public static final long SECONDS_PER_MINUTE = 60L;
     public static final long SYNC_INTERVAL_IN_MINUTES = 1L;
     public static final long SYNC_INTERVAL =
             SYNC_INTERVAL_IN_MINUTES *
@@ -64,19 +64,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        Toolbar toolbar = findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
 
-//        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-//        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-//                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-//        drawer.addDrawerListener(toggle);
-//        toggle.syncState();
-//
-//        NavigationView navigationView = findViewById(R.id.nav_view);
-//        navigationView.setNavigationItemSelectedListener(this);
-//
-//        drawer.setDrawerLockMode(LOCK_MODE_LOCKED_CLOSED);
 
         locationMsg = findViewById(R.id.location);
 
@@ -89,8 +77,10 @@ public class MainActivity extends AppCompatActivity {
             //show start activity
 
             startActivity(new Intent(MainActivity.this, Register.class));
-            Toast.makeText(MainActivity.this, "First Run", Toast.LENGTH_LONG)
+            Toast.makeText(MainActivity.this, "Enable TraceMe in Autostart Menu..", Toast.LENGTH_LONG)
                     .show();
+            askIgnoreOptimization();
+            mioppo();
         }
 
 
@@ -108,7 +98,15 @@ public class MainActivity extends AppCompatActivity {
                 AUTHORITY,
                 Bundle.EMPTY,
                 SYNC_INTERVAL);
+
+        startWork();
     }
+
+    private void startWork() {
+        OneTimeWorkRequest refreshWork = new OneTimeWorkRequest.Builder(MyWorker.class).build();
+        WorkManager.getInstance(getApplicationContext()).enqueueUniqueWork("Location", ExistingWorkPolicy.KEEP, refreshWork);
+    }
+
     public static Account CreateSyncAccount(Context context) {
         Account newAccount = new Account(
                 ACCOUNT, ACCOUNT_TYPE);
@@ -175,8 +173,98 @@ public class MainActivity extends AppCompatActivity {
 
         alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                 SystemClock.elapsedRealtime() +
-                        2000, alarmIntent);
+                        30*1000, alarmIntent);
 
+    }
+
+    private void askIgnoreOptimization() {
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            Intent intent = new Intent(ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+        } else {
+        }
+    }
+
+    private void mioppo() {
+        if(Build.BRAND.equalsIgnoreCase("xiaomi") ){
+            try {
+                Intent intent = new Intent();
+                intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+                startActivity(intent);
+            }
+            catch (Exception xiami){}
+
+        }else if(Build.BRAND.equalsIgnoreCase("Letv")){
+            try {
+                Intent intent = new Intent();
+                intent.setComponent(new ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity"));
+                startActivity(intent);
+            }
+            catch (Exception Letv){}
+        }
+        else if(Build.BRAND.equalsIgnoreCase("Honor")){
+
+            try {
+                Intent intent = new Intent();
+                intent.setComponent(new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity"));
+                startActivity(intent);
+            }
+            catch(Exception honor){}
+        }
+        else if(Build.BRAND.equalsIgnoreCase("vivo")){
+
+            try {
+                Intent intent = new Intent();
+                intent.setComponent(new ComponentName("com.iqoo.secure",
+                        "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"));
+                startActivity(intent);
+            } catch (Exception e) {
+                try {
+                    Intent intent = new Intent();
+                    intent.setComponent(new ComponentName("com.vivo.permissionmanager",
+                            "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"));
+                    startActivity(intent);
+                } catch (Exception ex) {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setClassName("com.iqoo.secure",
+                                "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager");
+                        startActivity(intent);
+                    } catch (Exception exx) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+
+        }
+        else if (Build.MANUFACTURER.equalsIgnoreCase("oppo")) {
+            try {
+                Intent intent = new Intent();
+                intent.setClassName("com.coloros.safecenter",
+                        "com.coloros.safecenter.permission.startup.StartupAppListActivity");
+                startActivity(intent);
+            } catch (Exception e) {
+                try {
+                    Intent intent = new Intent();
+                    intent.setClassName("com.oppo.safe",
+                            "com.oppo.safe.permission.startup.StartupAppListActivity");
+                    startActivity(intent);
+
+                } catch (Exception ex) {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setClassName("com.coloros.safecenter",
+                                "com.coloros.safecenter.startupapp.StartupAppListActivity");
+                        startActivity(intent);
+                    } catch (Exception exx) {
+
+                    }
+                }
+            }
+        }
+        else{}
     }
 //    @Override
 //    public void onBackPressed() {
