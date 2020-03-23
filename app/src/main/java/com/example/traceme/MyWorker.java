@@ -105,8 +105,24 @@ public class MyWorker extends Worker {
             Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
         }
 
-        OneTimeWorkRequest refreshWork = new OneTimeWorkRequest.Builder(MyWorker.class).build();
-        WorkManager.getInstance(getApplicationContext()).enqueueUniqueWork("Location", ExistingWorkPolicy.REPLACE, refreshWork);
+        //This thread is need to continue the service running
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (; ; ) {
+                    Log.i(TAG, "thread... is running...");
+                    try {
+                        Thread.sleep(5 * 1000);
+                        OneTimeWorkRequest refreshWork = new OneTimeWorkRequest.Builder(MyWorker.class).build();
+                        WorkManager.getInstance(getApplicationContext()).enqueueUniqueWork("Location", ExistingWorkPolicy.REPLACE, refreshWork);
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+
 
 
         return Result.success();
