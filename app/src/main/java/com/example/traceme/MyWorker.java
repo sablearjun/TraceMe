@@ -89,7 +89,7 @@ public class MyWorker extends Worker {
                                 mLocation = task.getResult();
                                 Log.d(TAG, "Location : " + mLocation);
                                 if(isMockLocationOn(mLocation,mContext)){
-                                    Toast.makeText(mContext, "Mock Location is Turned on..", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(mContext, "Mock Location is Turned on", Toast.LENGTH_SHORT).show();
                                 }
                                 String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
                                 DatabaseHelper dbHelper = new DatabaseHelper(mContext);
